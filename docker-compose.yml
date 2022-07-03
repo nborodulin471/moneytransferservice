@@ -1,0 +1,15 @@
+version: '3.3'
+
+services:
+#  frontend:
+#    build: https://github.com/serp-ya/card-transfer.git
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=myPassword
+    expose:
+      - 5432
+  backend:
+    container_name: moneytransferservice
+    build: .
