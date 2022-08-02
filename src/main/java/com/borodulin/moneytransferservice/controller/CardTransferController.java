@@ -1,7 +1,7 @@
 package com.borodulin.moneytransferservice.controller;
 
 import com.borodulin.moneytransferservice.model.Confirm;
-import com.borodulin.moneytransferservice.model.Transfer;
+import com.borodulin.moneytransferservice.model.TransferDto;
 import com.borodulin.moneytransferservice.service.CardTransferService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +23,9 @@ public class CardTransferController {
     private final CardTransferService cardTransferService;
 
     @PostMapping("/transfer")
-    public ResponseEntity<Map<String, String>> transfer(@RequestBody @Valid Transfer transfer) {
+    public ResponseEntity<Map<String, String>> transfer(@RequestBody @Valid TransferDto transfer) {
         return ResponseEntity.ok(
-                Map.of("operationId", cardTransferService.transfer(transfer))
+                Map.of("operationId", cardTransferService.transfer(transfer.mapToTransfer()))
         );
     }
 

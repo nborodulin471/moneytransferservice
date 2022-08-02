@@ -1,13 +1,14 @@
 package com.borodulin.moneytransferservice.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.lang.Nullable;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigInteger;
-import java.util.Date;
+
 
 /**
  * Модель с описанием сущности перевода
@@ -20,22 +21,19 @@ import java.util.Date;
 @Data
 @Entity
 @NoArgsConstructor
+@AllArgsConstructor
 public class Transfer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull
-    private BigInteger cardFromNumber;
-    @NotNull
-    private Date cardFromValidTill;
-    @NotNull
-    private Integer cardFromCVV;
-    @NotNull
-    private BigInteger cardToNumber;
+    @OneToOne
+    private Card cardFrom;
+    @OneToOne
+    private Card cardTo;
     @Embedded
-    @NotNull
     private PaymentAmount amount;
     @Nullable
+    @Size(max = 4)
     private String code;
     @Nullable
     private BigInteger commission;
