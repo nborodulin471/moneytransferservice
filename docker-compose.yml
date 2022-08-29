@@ -1,9 +1,7 @@
 version: '3.3'
 
 services:
-#  frontend:
-#    build: https://github.com/serp-ya/card-transfer.git
-  db:
+  datebase:
     image: postgres:latest
     environment:
       - POSTGRES_USER=postgres

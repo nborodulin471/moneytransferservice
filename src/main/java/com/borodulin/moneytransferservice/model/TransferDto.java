@@ -1,27 +1,22 @@
 package com.borodulin.moneytransferservice.model;
 
-import javax.validation.constraints.NotNull;
-import java.math.BigInteger;
+import lombok.Getter;
+import lombok.Setter;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+@Getter
+@Setter
 public class TransferDto {
-    @NotNull
-    private Card cardFromNumber;
-    @NotNull
-    private Card cardToNumber;
+    @NotBlank
+    private String cardFromNumber;
+    @NotBlank
+    private String cardFromValidTill;
+    @NotBlank
+    private String cardFromCVV;
+    @NotBlank
+    private String cardToNumber;
     @NotNull
     private PaymentAmount amount;
-    private String code;
-    private BigInteger commission;
-
-    public Transfer mapToTransfer() {
-        return new Transfer(
-                null,
-                cardFromNumber,
-                cardToNumber,
-                amount,
-                code,
-                commission);
-    }
-
-    ;
 }

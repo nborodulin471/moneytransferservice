@@ -1,54 +1,50 @@
 package com.borodulin.moneytransferservice.testcontainer;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.testcontainers.containers.GenericContainer;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Testcontainers
+@DirtiesContext
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class IntegrationTest {
     @Container
-    private final static PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:latest")
+    private final static PostgreSQLContainer<?> postgresDB = new PostgreSQLContainer<>("postgres:latest")
             .withExposedPorts(5432, 5432)
             .withUsername("postgres")
-            .withPassword("myPassword")
-            .waitingFor(Wait.forListeningPort());
-
-    @Container
-    private final static GenericContainer<?> MONEY_TRANSFER_SERVICE = new GenericContainer<>(DockerImageName.parse("moneytransferservice:latest"))
-            .withExposedPorts(5500)
-            .dependsOn(POSTGRES)
-            .waitingFor(Wait.forListeningPort());
+            .withPassword("myPassword");
 
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @BeforeAll
-    public static void setUp() {
-        System.setProperty("spring.datasource.url", POSTGRES.getJdbcUrl());
-        System.setProperty("spring.datasource.username", POSTGRES.getUsername());
-        System.setProperty("spring.datasource.password", POSTGRES.getPassword());
+    @DynamicPropertySource
+    public static void properties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgresDB::getJdbcUrl);
+        registry.add("spring.datasource.username", postgresDB::getUsername);
+        registry.add("spring.datasource.password", postgresDB::getPassword);
+
     }
 
     @Test
     public void transfer() {
         String body = "{" +
-                "  \"cardFromNumber\":\"1231231123123123\"," +
-                "  \"cardFromValidTill\":\"101012020\"," +
+                "  \"cardFromNumber\":\"20200222222222\"," +
+                "  \"cardFromValidTill\":\"10-10-2022\"," +
                 "  \"cardFromCVV\":\"123\"," +
-                "  \"cardToNumber\":\"123\"," +
+                "  \"cardToNumber\":\"20204444444444\"," +
                 "  \"amount\": {" +
                 "    \"value\":100," +
                 "    \"currency\":\"RUR\"" +
@@ -58,9 +54,13 @@ public class IntegrationTest {
                 "  \"operationId\": \"1\"" +
                 "}";
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity requestEntity = new HttpEntity<>(body, headers);
+
         ResponseEntity<String> forEntity = restTemplate.postForEntity(
-                "http://localhost:" + MONEY_TRANSFER_SERVICE.getMappedPort(5500) + "/transfer",
-                body,
+                "/transfer",
+                requestEntity,
                 String.class
         );
 
@@ -76,10 +76,13 @@ public class IntegrationTest {
         String excepted = "{" +
                 "  \"operationId\": \"17\"" +
                 "}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity requestEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> forEntity = restTemplate.postForEntity(
-                "http://localhost:" + MONEY_TRANSFER_SERVICE.getMappedPort(5500) + "/confirmOperation",
-                body,
+                "/confirmOperation",
+                requestEntity,
                 String.class
         );
 
