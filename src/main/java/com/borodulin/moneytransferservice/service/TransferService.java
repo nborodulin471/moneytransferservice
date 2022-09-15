@@ -53,7 +53,7 @@ public class TransferService {
 
     private void isTransferValid(Card cardFrom, Card cardTo) {
         if (cardFrom.getBalance().compareTo(BigInteger.valueOf(0)) == 0
-                || cardFrom.getNumber() == cardTo.getNumber()) {
+                || cardFrom.getNumber().equals(cardTo.getNumber())) {
             throw new IllegalArgumentException("Транзакция не валидна");
         }
     }
@@ -63,7 +63,7 @@ public class TransferService {
         Transfer transfer = transferDao.findById(confirm.getOperationId())
                 .orElseThrow(() -> new IllegalArgumentException("Перевод не найден"));
 
-        if (confirm.getCode().equals(OTP_CODE)) {
+        if (!confirm.getCode().equals(OTP_CODE)) {
             throw new IllegalArgumentException("Подтверждающий код не прошел проверку");
         }
 

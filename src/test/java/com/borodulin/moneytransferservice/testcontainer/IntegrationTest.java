@@ -12,6 +12,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.ext.ScriptUtils;
+import org.testcontainers.jdbc.JdbcDatabaseDelegate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -40,23 +42,25 @@ public class IntegrationTest {
 
     @Test
     public void transfer() {
+        var containerDelegate = new JdbcDatabaseDelegate(postgresDB, "");
+        ScriptUtils.runInitScript(containerDelegate, "init-card.sql");
         String body = "{" +
-                "  \"cardFromNumber\":\"20200222222222\"," +
+                "  \"cardFromNumber\":\"777777777777\"," +
                 "  \"cardFromValidTill\":\"10-10-2022\"," +
                 "  \"cardFromCVV\":\"123\"," +
-                "  \"cardToNumber\":\"20204444444444\"," +
+                "  \"cardToNumber\":\"88888888888\"," +
                 "  \"amount\": {" +
                 "    \"value\":100," +
                 "    \"currency\":\"RUR\"" +
                 "  }" +
                 "}";
         String excepted = "{" +
-                "  \"operationId\": \"1\"" +
+                "\"operationId\":\"1\"" +
                 "}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestEntity = new HttpEntity<>(body, headers);
+        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> forEntity = restTemplate.postForEntity(
                 "/transfer",
@@ -69,16 +73,18 @@ public class IntegrationTest {
 
     @Test
     public void confirm() {
+        var containerDelegate = new JdbcDatabaseDelegate(postgresDB, "");
+        ScriptUtils.runInitScript(containerDelegate, "init-transfer.sql");
         String body = "{" +
-                "  \"operationId\": \"17\"," +
-                "  \"code\": \"успех\"" +
+                "  \"operationId\": \"-1\"," + // указан -1 что бы тесты всегда выполнялись, иначе при совпадении идентификаторов будет ошибка
+                "  \"code\": \"0000\"" +
                 "}";
         String excepted = "{" +
-                "  \"operationId\": \"17\"" +
+                "\"operationId\":\"-1\"" +
                 "}";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity requestEntity = new HttpEntity<>(body, headers);
+        HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<String> forEntity = restTemplate.postForEntity(
                 "/confirmOperation",
